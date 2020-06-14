@@ -12,30 +12,37 @@ import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.persistence.EntityManagerFactory;
 
-@Configuration
-public class AccountMigrationJobConfiguration {
+import static dev.hongsii.springbatchpractice.config.JpaConfig.DEFAULT_ENTITY_MANAGER_FACTORY;
+import static dev.hongsii.springbatchpractice.config.JpaConfig.READ_ENTITY_MANAGER_FACTORY;
 
-    private static final String JOB_NAME = "AccountMigrationJob";
+@Configuration
+public class AccountMigrationByReadJobConfiguration {
+
+    private static final String JOB_NAME = "AccountMigrationByReadJob";
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final EntityManagerFactory entityManagerFactory;
+    private final EntityManagerFactory readEntityManagerFactory;
 
     private int chunkSize;
 
-    public AccountMigrationJobConfiguration(JobBuilderFactory jobBuilderFactory,
-                                            StepBuilderFactory stepBuilderFactory,
-                                            EntityManagerFactory entityManagerFactory,
-                                            @Value("${chunkSize:1000}") int chunkSize) {
+    public AccountMigrationByReadJobConfiguration(JobBuilderFactory jobBuilderFactory,
+                                                  StepBuilderFactory stepBuilderFactory,
+                                                  @Qualifier(DEFAULT_ENTITY_MANAGER_FACTORY) EntityManagerFactory entityManagerFactory,
+                                                  @Qualifier(READ_ENTITY_MANAGER_FACTORY) EntityManagerFactory readEntityManagerFactory,
+                                                  @Value("${chunkSize:1000}") int chunkSize) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.entityManagerFactory = entityManagerFactory;
+        this.readEntityManagerFactory = readEntityManagerFactory;
         this.chunkSize = chunkSize;
     }
 
@@ -61,13 +68,13 @@ public class AccountMigrationJobConfiguration {
     public JpaPagingItemReader<Account> reader() {
         return new JpaPagingItemReaderBuilder<Account>()
                 .name(JOB_NAME + "Reader")
-                .entityManagerFactory(entityManagerFactory)
+                .entityManagerFactory(readEntityManagerFactory)
                 .pageSize(chunkSize)
                 .queryString("SELECT a FROM Account a")
                 .build();
     }
 
-    public ItemProcessor<Account, AccountHistory> processor() {
+    private ItemProcessor<Account, AccountHistory> processor() {
         return AccountHistory::new;
     }
 

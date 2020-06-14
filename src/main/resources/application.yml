@@ -4,9 +4,52 @@ spring:
     hibernate:
       ddl-auto: update
 
+  batch:
+    initialize-schema: always
+    job:
+      names: ${job.names:NONE}
+
+  main.allow-bean-definition-overriding: true
+
+logging:
+  level:
+    org.hibernate.type: DEBUG
+    dev.hongsii.springbatchpractice: DEBUG
+
+---
+
+spring.profiles: local
+
+custom:
   datasource:
+    type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      driver-class-name: org.h2.Driver
-      jdbc-url: jdbc:h2:mem:testdb;MODE=MYSQL
-      username: sa
-      password:
+      read:
+        driver-class-name: org.h2.Driver
+        jdbc-url: jdbc:h2:mem:test_db;MODE=MYSQL
+        username: sa
+        password:
+      write:
+        driver-class-name: org.h2.Driver
+        jdbc-url: jdbc:h2:mem:test_db;MODE=MYSQL
+        username: sa
+        password:
+
+---
+
+spring.profiles: prod
+
+custom:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      read:
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3307/batch_read_db
+        username: hongsii
+        password: hongsii123
+      write:
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3306/batch_test_db
+        username: hongsii
+        password: hongsii123
